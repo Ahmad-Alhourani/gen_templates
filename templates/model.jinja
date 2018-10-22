@@ -1,0 +1,101 @@
+   <?php
+
+  namespace App\Models;
+
+    use Illuminate\Database\Eloquent\Model;
+    use App\Models\Traits\Attribute\{{data['model_name']}}Attribute;
+    use App\Models\Auth\User;
+    use Illuminate\Support\Collection;
+    use Sofa\Eloquence\Eloquence;
+    use Sofa\Eloquence\Metable;{% if data['count'](data['sluggable'])%}
+    use Spatie\Sluggable\HasSlug;
+    use Spatie\Sluggable\SlugOptions;{% endif %}{% if data['hasSoftDelete']%}
+    use Illuminate\Database\Eloquent\SoftDeletes;{% endif %}{% if data['count'](data['translatable'])%}
+    use XLabTechs\Translatable\Traits\HasTranslations;{% endif %}
+
+
+    class {{data['model_name']}} extends Model{
+        use {{data['model_name']}}Attribute, Eloquence, Metable{% if data['hasSoftDelete']%}, SoftDeletes {% endif %}{% if data['count'](data['translatable'])%}, HasTranslations {% endif %}{% if data['count'](data['sluggable'])%}, HasSlug {% endif %};
+
+        {% if data['count'](data['sluggable'])%}
+        /**
+        * Get the options for generating the slug.
+        */
+
+        public function getSlugOptions() : SlugOptions
+        {
+            return SlugOptions::create()
+            ->generateSlugsFrom('{{data['sluggable'][0]}}')
+            ->saveSlugsTo('{{data['sluggable'][1]}}');
+        }
+        {% endif %}
+
+        /**
+        * The attributes that are mass assignable.
+        *
+        * @var array
+        */
+
+        protected $fillable = [ {% for f in data['fillable'] %}
+            "{{ f }}",{% endfor %}
+        ];
+        {% if not  data['count'](data['timestamps'])%}
+        public $timestamps = false;{% endif%}
+
+
+        /**
+        * Get the key name for route model binding.
+        *
+        * @return string
+        */
+        public function getRouteKeyName()
+        {
+           return 'id';
+        }
+                {% if data['count'](data['relations'])%}
+        /* ************************ RELATIONS ************************ */
+        {% if data['count'](data['relations']['hasMany'])%}
+        {% for item in data['relations']['hasMany'] %}
+        /**
+        * Get all the {{ item['related_table'] }} for the {{data['model_name']}}.
+        * @return \Illuminate\Database\Eloquent\Relations\HasMany
+        */
+        public function {{ item['related_table'] }}() {
+            return $this->hasMany({{ item['related_model_name'] }}::class)->latest();
+        }
+        {% endfor %}{% endif %}
+
+        {% if data['count'](data['relations']['belongsToMany'])%}
+        {% for item in data['relations']['belongsToMany'] %}
+        /**
+        * Get all the {{ item['related_table'] }} for the {{data['model_name']}}.
+        * @return \Illuminate\Database\Eloquent\Relations\HasMany
+        */
+        public function {{ item['related_table'] }}() {
+            return $this->belongsToMany({{ item['related_model_name'] }}::class);
+        }
+        {% endfor %}{% endif %}
+
+        {% if data['count'](data['relations']['belongsTo'])%}
+        {% for item in data['relations']['belongsTo'] %}
+        * Get  the {{ item['related_model_name'] }} that owns the {{data['model_name']}}.
+        * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+        */
+        public function {{ item['related_class'] }}() {
+            return $this->belongsTo({{ item['related_model_name'] }}::class);
+        }
+        {% endfor%}{% endif%}
+
+         {% if data['count'](data['foreign'])%}
+        {% for item in data['foreign'] %}
+        * Get  the {{ item['modelName'] }} that owns the {{data['model_name']}}.
+        * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+        */
+        public function {{ item['lowerModelName'] }}() {
+            return $this->belongsTo({{ item['modelName'] }}::class);
+        }
+        {% endfor%}{% endif%}
+
+        {% endif%}
+
+    }
