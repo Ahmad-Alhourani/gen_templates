@@ -1,4 +1,7 @@
 {
-"model":true,
+"model":false,
+"createEvent":true,
+"updateEvent":true,
+"deleteEvent":true,
 "controller":true
 }
